@@ -24,6 +24,20 @@ python -m validator.vibe_check templates/app-starter   # should PASS, 0 errors
 python -m examples.run_vibe                             # generate → check → coach demo
 ```
 
+## The studio (browser chat, end-to-end)
+
+```bash
+uvicorn studio.main:app --port 8090   # open http://localhost:8090
+```
+
+Split screen — chat left, live preview right, validator + model status bar,
+files/findings underneath. The pipeline is fully built: session → scaffold →
+message → Pydantic AI agent → FilePlan → apply → validator (one repair
+round-trip on failure) → preview. **The only integration left is the model:**
+set `WORKPLACE_MODEL` to your model string (gateway/Azure/OpenAI) and the
+same pipeline generates real apps. Unset, it runs on Pydantic AI's TestModel —
+all plumbing real, generated content placeholder. See `studio/README.md`.
+
 Pairs with the **workplace-muse** template: apps generated here consume data
 through the same MCP connectors and the same identity chain (user token →
 internal JWT auth service → service's own governed account).

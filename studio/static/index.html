@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibe Studio — build on the paved road</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+  header { padding: .6rem 1rem; background: #14213d; color: #fff; display: flex; gap: 1rem; align-items: baseline; }
+  header .sub { color: #c8d2e8; font-size: .85rem; }
+  main { flex: 1; display: grid; grid-template-columns: 26rem 1fr; min-height: 0; }
+  #chatpane { display: flex; flex-direction: column; border-right: 1px solid #ddd; min-height: 0; }
+  #log { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .msg { padding: .6rem .8rem; border-radius: .7rem; white-space: pre-wrap; line-height: 1.4; max-width: 95%; }
+  .user { background: #e8eefc; align-self: flex-end; }
+  .assistant { background: #f3f3f0; align-self: flex-start; }
+  form { display: flex; gap: .5rem; padding: .7rem; border-top: 1px solid #ddd; }
+  input[type=text] { flex: 1; padding: .55rem; font-size: 1rem; }
+  button { padding: .55rem 1rem; font-size: 1rem; cursor: pointer; }
+  #previewpane { display: flex; flex-direction: column; min-width: 0; }
+  #statusbar { display: flex; gap: 1.2rem; flex-wrap: wrap; padding: .5rem 1rem; background: #f7f5ee;
+               border-bottom: 1px solid #ddd; font-size: .9rem; }
+  .ok { color: #137333; font-weight: 600; } .bad { color: #b3261e; font-weight: 600; }
+  iframe { flex: 1; border: 0; width: 100%; }
+  details { padding: .5rem 1rem; border-top: 1px solid #eee; font-size: .85rem; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } iframe { min-height: 40vh; } }
+</style>
+</head>
+<body>
+<header>
+  <strong>Vibe Studio</strong>
+  <span class="sub">Describe it. It gets built on the firm's patterns — hosting, sign-in, data and keys are handled, not options.</span>
+</header>
+<main>
+  <section id="chatpane">
+    <div id="log"></div>
+    <form id="composer">
+      <input type="text" id="text" placeholder="e.g. Build me a team roster dashboard" autocomplete="off">
+      <button type="submit">Send</button>
+    </form>
+  </section>
+  <section id="previewpane">
+    <div id="statusbar">
+      <span>Validator: <span id="st-validator">—</span></span>
+      <span>Model: <span id="st-model">—</span></span>
+      <span>Preview: <span id="st-preview">none yet</span></span>
+    </div>
+    <iframe id="preview" title="App preview"></iframe>
+    <details>
+      <summary>Files &amp; pattern findings (for the curious / support)</summary>
+      <pre id="files"></pre>
+      <pre id="findings"></pre>
+    </details>
+  </section>
+</main>
+<script>
+const AUTH = { "Authorization": "Bearer demo:alice", "Content-Type": "application/json" };
+let sessionId = null;
+const log = document.getElementById("log");
+
+function bubble(role, text) {
+  const d = document.createElement("div");
+  d.className = "msg " + role; d.textContent = text;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+
+function applyStatus(st) {
+  if (!st) return;
+  const v = document.getElementById("st-validator");
+  v.textContent = st.validator.toUpperCase();
+  v.className = st.validator === "pass" ? "ok" : "bad";
+  document.getElementById("st-model").textContent = st.model;
+  document.getElementById("st-preview").textContent = st.preview_url;
+  document.getElementById("files").textContent = st.files.join("\n");
+  document.getElementById("findings").textContent =
+    st.findings.length ? JSON.stringify(st.findings, null, 2) : "No findings.";
+  if (st.preview_url) document.getElementById("preview").src = st.preview_url;
+}
+
+async function start() {
+  const r = await fetch("/api/session", { method: "POST", headers: AUTH, body: JSON.stringify({ user: "alice" }) });
+  const st = await r.json();
+  sessionId = st.session_id;
+  applyStatus(st);
+  bubble("assistant", "Your app is scaffolded from the starter and the preview is live. What should it do? Describe it in plain English — try asking for data, a name for it, or a change.");
+}
+start();
+
+document.getElementById("composer").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("text");
+  const text = input.value.trim(); if (!text) return;
+  input.value = "";
+  bubble("user", text);
+  bubble("assistant", "Building… (agent plan → apply → pattern check)");
+  const r = await fetch("/api/chat", { method: "POST", headers: AUTH,
+    body: JSON.stringify({ session_id: sessionId, message: text }) });
+  const out = await r.json();
+  log.lastChild.textContent = out.reply || JSON.stringify(out);
+  applyStatus(out);
+});
+</script>
+</body>
+</html>

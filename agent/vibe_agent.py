@@ -69,6 +69,9 @@ vibe_agent = Agent(
 @vibe_agent.tool
 def check_patterns(ctx: RunContext[None], project_dir: str) -> list[Finding]:
     """Run the pattern validator on the current state of the app."""
+    from pathlib import Path as _P
+    if not _P(project_dir).exists():
+        return []  # nothing to check yet — the post-apply validator is authoritative
     return check_project(project_dir)
 
 
