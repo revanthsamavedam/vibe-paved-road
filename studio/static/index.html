@@ -43,6 +43,8 @@
   <section id="previewpane">
     <div id="statusbar">
       <span>Validator: <span id="st-validator">—</span></span>
+      <span>Agents: <span id="st-agents">—</span></span>
+      <span>Reviewer: <span id="st-reviewer">—</span></span>
       <span>Model: <span id="st-model">—</span></span>
       <span>Preview: <span id="st-preview">none yet</span></span>
     </div>
@@ -70,6 +72,18 @@ function applyStatus(st) {
   const v = document.getElementById("st-validator");
   v.textContent = st.validator.toUpperCase();
   v.className = st.validator === "pass" ? "ok" : "bad";
+  if (st.agents_used !== undefined)
+    document.getElementById("st-agents").textContent =
+      st.agents_used.length ? st.agents_used.join(" → ") : "—";
+  if (st.reviewer !== undefined) {
+    const rv = document.getElementById("st-reviewer");
+    if (!st.reviewer) { rv.textContent = "—"; rv.className = ""; }
+    else {
+      rv.textContent = st.reviewer.approved ? "APPROVED" : "VETOED";
+      rv.className = st.reviewer.approved ? "ok" : "bad";
+      rv.title = (st.reviewer.issues || []).join("; ") || st.reviewer.summary || "";
+    }
+  }
   document.getElementById("st-model").textContent = st.model;
   document.getElementById("st-preview").textContent = st.preview_url;
   document.getElementById("files").textContent = st.files.join("\n");
@@ -93,7 +107,7 @@ document.getElementById("composer").addEventListener("submit", async (e) => {
   const text = input.value.trim(); if (!text) return;
   input.value = "";
   bubble("user", text);
-  bubble("assistant", "Building… (agent plan → apply → pattern check)");
+  bubble("assistant", "Building… (builder + data subagents → reviewer gate → apply → pattern check)");
   const r = await fetch("/api/chat", { method: "POST", headers: AUTH,
     body: JSON.stringify({ session_id: sessionId, message: text }) });
   const out = await r.json();

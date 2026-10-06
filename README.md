@@ -30,10 +30,14 @@ python -m examples.run_vibe                             # generate → check →
 uvicorn studio.main:app --port 8090   # open http://localhost:8090
 ```
 
-Split screen — chat left, live preview right, validator + model status bar,
-files/findings underneath. The pipeline is fully built: session → scaffold →
-message → Pydantic AI agent → FilePlan → apply → validator (one repair
-round-trip on failure) → preview. **The only integration left is the model:**
+Split screen — chat left, live preview right, validator + agents + reviewer
+status bar, files/findings underneath. The pipeline is fully built and runs
+on **subagents, coordinated by an orchestrator** (`agent/orchestrator.py`):
+session → scaffold → message → builder (frontend) + data (backend) subagents
+in parallel → plans filtered to scope in code → merged plan gated by a
+**reviewer subagent with veto** (one revision round on veto) → apply →
+validator (one repair round routed to the owning subagent) → preview.
+**The only integration left is the model:**
 set `WORKPLACE_MODEL` to your model string (gateway/Azure/OpenAI) and the
 same pipeline generates real apps. Unset, it runs on Pydantic AI's TestModel —
 all plumbing real, generated content placeholder. See `studio/README.md`.

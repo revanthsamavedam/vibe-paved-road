@@ -38,6 +38,8 @@ def test_chat_runs_agent_pipeline_end_to_end():
     out = r.json()
     assert out["reply"] and "validator:" in out["reply"]
     assert out["validator"] in ("pass", "fail")
+    assert out["agents_used"] == ["builder", "data", "reviewer"]
+    assert set(out["reviewer"]) == {"approved", "issues", "summary"}
     # preview still serves after the plan was applied
     assert client.get(out["preview_url"]).status_code == 200
 
@@ -51,6 +53,7 @@ def test_chat_screens_pasted_secrets_before_model():
     assert r.status_code == 200
     assert "secret" in r.json()["reply"].lower()
     assert r.json()["changed"] == []
+    assert r.json()["agents_used"] == [] and r.json()["reviewer"] is None
 
 
 def test_preview_items_endpoint_matches_starter_shape():
