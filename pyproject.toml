@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vibe-paved-road"
+version = "0.1.0"
+description = "Vibe coding for business users, on the firm's patterns: pattern skills for the coding agent, a starter app with patterns pre-applied, and a validator that enforces them. Sanitized template."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.6",
+  "pydantic-ai>=0.0.49",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools.packages.find]
+include = ["validator*", "agent*"]

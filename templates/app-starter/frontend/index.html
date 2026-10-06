@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vibe App</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 42rem; padding: 0 1rem; }
+  .fresh { color: #555; font-size: .85rem; }
+</style>
+</head>
+<body>
+<h1>Vibe App</h1>
+<p class="fresh" id="freshness">Loading…</p>
+<ul id="items"></ul>
+<script>
+// Frontend talks ONLY to this app's backend API (Pattern P3).
+// Identity arrives via SSO; the token is attached by the platform shell
+// in production — here we use the local preview token.
+const token = "demo:alice";
+fetch("/api/items", { headers: { "Authorization": "Bearer " + token } })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById("freshness").textContent = "Data freshness: " + data.freshness;
+    document.getElementById("items").innerHTML =
+      data.items.map(i => "<li>" + i.title + " — " + i.status + "</li>").join("");
+  });
+</script>
+</body>
+</html>
